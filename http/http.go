@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -274,22 +275,39 @@ func setBody(req *http.Request, body starlark.String, formData *starlark.Dict, f
 			form.Add(keystr, valstr)
 		}
 
-		var enc string
+		var contentType string
 		switch formEncoding {
 		case FormEncodingURL:
-			enc = FormEncodingURL
+			contentType = FormEncodingURL
 			req.Body = ioutil.NopCloser(strings.NewReader(form.Encode()))
 
 		case FormEncodingMultipart, "":
-			enc = FormEncodingMultipart
-			req.Form = form
+			var b bytes.Buffer
+			mw := multipart.NewWriter(&b)
+			defer mw.Close()
+
+			contentType = mw.FormDataContentType()
+
+			for k, values := range form {
+				for _, v := range values {
+					w, err := mw.CreateFormField(k)
+					if err != nil {
+						return err
+					}
+					if _, err := w.Write([]byte(v)); err != nil {
+						return err
+					}
+				}
+			}
+
+			req.Body = ioutil.NopCloser(&b)
 
 		default:
 			return fmt.Errorf("unknown form encoding: %s", formEncoding)
 		}
 
 		if req.Header.Get("Content-Type") == "" {
-			req.Header.Set("Content-Type", enc)
+			req.Header.Set("Content-Type", contentType)
 		}
 	}
 

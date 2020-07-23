@@ -14,6 +14,7 @@ perform an HTTP DELETE request, returning a response
 | `headers` | `dict` | optional. dictionary of headers to add to request |
 | `body` | `string` | optional. raw string body to provide to the request |
 | `form_body` | `dict` | optional. dict of values that will be encoded as form data |
+| `form_encoding` | `string` | optional. `multipart/form-data` (default) or `application/x-www-form-urlencoded` |
 | `json_body` | `any` | optional. json data to supply as a request. handy for working with JSON-API's |
 | `auth` | `tuple` | optional. (username,password) tuple for http basic authorization |
 
@@ -41,6 +42,7 @@ perform an HTTP OPTIONS request, returning a response
 | `headers` | `dict` | optional. dictionary of headers to add to request |
 | `body` | `string` | optional. raw string body to provide to the request |
 | `form_body` | `dict` | optional. dict of values that will be encoded as form data |
+| `form_encoding` | `string` | optional. `multipart/form-data` (default) or `application/x-www-form-urlencoded` |
 | `json_body` | `any` | optional. json data to supply as a request. handy for working with JSON-API's |
 | `auth` | `tuple` | optional. (username,password) tuple for http basic authorization |
 
@@ -56,6 +58,7 @@ perform an HTTP PATCH request, returning a response
 | `headers` | `dict` | optional. dictionary of headers to add to request |
 | `body` | `string` | optional. raw string body to provide to the request |
 | `form_body` | `dict` | optional. dict of values that will be encoded as form data |
+| `form_encoding` | `string` | optional. `multipart/form-data` (default) or `application/x-www-form-urlencoded` |
 | `json_body` | `any` | optional. json data to supply as a request. handy for working with JSON-API's |
 | `auth` | `tuple` | optional. (username,password) tuple for http basic authorization |
 
@@ -71,6 +74,7 @@ perform an HTTP POST request, returning a response
 | `headers` | `dict` | optional. dictionary of headers to add to request |
 | `body` | `string` | optional. raw string body to provide to the request |
 | `form_body` | `dict` | optional. dict of values that will be encoded as form data |
+| `form_encoding` | `string` | optional. `multipart/form-data` (default) or `application/x-www-form-urlencoded` |
 | `json_body` | `any` | optional. json data to supply as a request. handy for working with JSON-API's |
 | `auth` | `tuple` | optional. (username,password) tuple for http basic authorization |
 
@@ -86,6 +90,7 @@ perform an HTTP PUT request, returning a response
 | `headers` | `dict` | optional. dictionary of headers to add to request |
 | `body` | `string` | optional. raw string body to provide to the request |
 | `form_body` | `dict` | optional. dict of values that will be encoded as form data |
+| `form_encoding` | `string` | optional. `multipart/form-data` (default) or `application/x-www-form-urlencoded` |
 | `json_body` | `any` | optional. json data to supply as a request. handy for working with JSON-API's |
 | `auth` | `tuple` | optional. (username,password) tuple for http basic authorization |
 

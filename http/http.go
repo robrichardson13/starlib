@@ -33,6 +33,14 @@ var (
 	Guard RequestGuard
 )
 
+// Encodings for form data.
+//
+// See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+const (
+	FormEncodingMultipart = "multipart/form-data"
+	FormEncodingURL       = "application/x-www-form-urlencoded"
+)
+
 // LoadModule creates an http Module
 func LoadModule() (starlark.StringDict, error) {
 	var m = &Module{cli: Client}
@@ -67,12 +75,13 @@ func (m *Module) Struct() *starlarkstruct.Struct {
 // StringDict returns all module methods in a starlark.StringDict
 func (m *Module) StringDict() starlark.StringDict {
 	return starlark.StringDict{
-		"get":     starlark.NewBuiltin("get", m.reqMethod("get")),
-		"put":     starlark.NewBuiltin("put", m.reqMethod("put")),
-		"post":    starlark.NewBuiltin("post", m.reqMethod("post")),
-		"delete":  starlark.NewBuiltin("delete", m.reqMethod("delete")),
-		"patch":   starlark.NewBuiltin("patch", m.reqMethod("patch")),
-		"options": starlark.NewBuiltin("options", m.reqMethod("options")),
+		"get":      starlark.NewBuiltin("get", m.reqMethod("get")),
+		"put":      starlark.NewBuiltin("put", m.reqMethod("put")),
+		"post":     starlark.NewBuiltin("post", m.reqMethod("post")),
+		"postForm": starlark.NewBuiltin("postForm", m.reqMethod("postForm")),
+		"delete":   starlark.NewBuiltin("delete", m.reqMethod("delete")),
+		"patch":    starlark.NewBuiltin("patch", m.reqMethod("patch")),
+		"options":  starlark.NewBuiltin("options", m.reqMethod("options")),
 	}
 }
 
@@ -80,16 +89,17 @@ func (m *Module) StringDict() starlark.StringDict {
 func (m *Module) reqMethod(method string) func(thread *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	return func(thread *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		var (
-			urlv     starlark.String
-			params   = &starlark.Dict{}
-			headers  = &starlark.Dict{}
-			formBody = &starlark.Dict{}
-			auth     starlark.Tuple
-			body     starlark.String
-			jsonBody starlark.Value
+			urlv         starlark.String
+			params       = &starlark.Dict{}
+			headers      = &starlark.Dict{}
+			formBody     = &starlark.Dict{}
+			formEncoding starlark.String
+			auth         starlark.Tuple
+			body         starlark.String
+			jsonBody     starlark.Value
 		)
 
-		if err := starlark.UnpackArgs(method, args, kwargs, "url", &urlv, "params?", &params, "headers", &headers, "body", &body, "form_body", &formBody, "json_body", &jsonBody, "auth", &auth); err != nil {
+		if err := starlark.UnpackArgs(method, args, kwargs, "url", &urlv, "params?", &params, "headers", &headers, "body", &body, "form_body", &formBody, "form_encoding", &formEncoding, "json_body", &jsonBody, "auth", &auth); err != nil {
 			return nil, err
 		}
 
@@ -117,7 +127,7 @@ func (m *Module) reqMethod(method string) func(thread *starlark.Thread, _ *starl
 		if err = setAuth(req, auth); err != nil {
 			return nil, err
 		}
-		if err = setBody(req, body, formBody, jsonBody); err != nil {
+		if err = setBody(req, body, formBody, formEncoding, jsonBody); err != nil {
 			return nil, err
 		}
 
@@ -217,7 +227,7 @@ func setHeaders(req *http.Request, headers *starlark.Dict) error {
 	return nil
 }
 
-func setBody(req *http.Request, body starlark.String, formData *starlark.Dict, jsondata starlark.Value) error {
+func setBody(req *http.Request, body starlark.String, formData *starlark.Dict, formEncoding starlark.String, jsondata starlark.Value) error {
 	if !util.IsEmptyString(body) {
 		uq, err := strconv.Unquote(body.String())
 		if err != nil {
@@ -242,13 +252,7 @@ func setBody(req *http.Request, body starlark.String, formData *starlark.Dict, j
 	}
 
 	if formData != nil && formData.Len() > 0 {
-		if req.Header.Get("Content-Type") == "" {
-			req.Header.Set("Content-Type", "multipart/form-data")
-		}
-
-		if req.Form == nil {
-			req.Form = url.Values{}
-		}
+		form := url.Values{}
 		for _, key := range formData.Keys() {
 			keystr, err := AsString(key)
 			if err != nil {
@@ -267,7 +271,25 @@ func setBody(req *http.Request, body starlark.String, formData *starlark.Dict, j
 				return err
 			}
 
-			req.Form.Add(keystr, valstr)
+			form.Add(keystr, valstr)
+		}
+
+		var enc string
+		switch formEncoding {
+		case FormEncodingURL:
+			enc = FormEncodingURL
+			req.Body = ioutil.NopCloser(strings.NewReader(form.Encode()))
+
+		case FormEncodingMultipart, "":
+			enc = FormEncodingMultipart
+			req.Form = form
+
+		default:
+			return fmt.Errorf("unknown form encoding: %s", formEncoding)
+		}
+
+		if req.Header.Get("Content-Type") == "" {
+			req.Header.Set("Content-Type", enc)
 		}
 	}
 

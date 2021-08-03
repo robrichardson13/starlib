@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/qri-io/starlib/util"
-	"github.com/qri-io/starlib/util/replacecr"
+	"github.com/robrichardson13/starlib/util"
+	"github.com/robrichardson13/starlib/util/replacecr"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 )

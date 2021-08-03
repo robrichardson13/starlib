@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/qri-io/starlib/util"
+	"github.com/robrichardson13/starlib/util"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 )

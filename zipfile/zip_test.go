@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/qri-io/starlib/testdata"
+	"github.com/robrichardson13/starlib/testdata"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarktest"
 )

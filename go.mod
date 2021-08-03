@@ -1,4 +1,4 @@
-module github.com/qri-io/starlib
+module github.com/robrichardson13/starlib
 
 go 1.12
 
